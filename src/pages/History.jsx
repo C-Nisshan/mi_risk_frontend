@@ -2,164 +2,229 @@
 import { useState, useEffect } from "react";
 import { useAuth, API_BASE } from "../App";
 
-const RISK_COLOR = { Low: "#10b981", Moderate: "#f59e0b", High: "#ef4444" };
-const RISK_BG    = { Low: "#d1fae5", Moderate: "#fef3c7", High: "#fee2e2" };
+const RC = { Low: "#10b981", Moderate: "#f59e0b", High: "#ef4444" };
 
 function Tab({ active, onClick, children }) {
   return (
-    <button onClick={onClick} style={{
-      padding: "8px 20px", borderRadius: 8, border: "none", cursor: "pointer",
-      fontWeight: active ? 600 : 400, fontSize: 13,
-      background: active ? "#1e3a5f" : "transparent",
-      color:      active ? "#fff"    : "#64748b",
-    }}>
+    <button
+      onClick={onClick}
+      className={`btn px-4 py-2 rounded-pill fw-semibold ${active ? "btn-success" : "btn-outline-light"}`}
+    >
       {children}
     </button>
   );
 }
 
+function fatColor(g) {
+  return g > 20 ? "#ef4444" : g > 10 ? "#f59e0b" : "#10b981";
+}
+
 export default function History() {
   const { token } = useAuth();
-  const [tab, setTab]           = useState("food");
+  const [tab, setTab] = useState("food");
   const [foodLogs, setFoodLogs] = useState([]);
   const [riskHistory, setRiskHistory] = useState([]);
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const fetchFood = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/food/fat/today`, {
+      const res = await fetch(`${API_BASE}/mi/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-    } catch {}
-
-    // Use dashboard trend for full food history
-    const res2 = await fetch(`${API_BASE}/mi/dashboard`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const d = await res2.json();
-    setFoodLogs(d.fat_trend_30d || []);
+      const d = await res.json();
+      setFoodLogs(d.fat_trend_30d || []);
+    } catch (err) {
+      console.error(err);
+    }
     setLoading(false);
   };
 
   const fetchRisk = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/mi/history`, {
+      const res = await fetch(`${API_BASE}/mi/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setRiskHistory(data.history || []);
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
     if (tab === "food") fetchFood();
-    else                fetchRisk();
+    else fetchRisk();
   }, [tab]);
 
   return (
-    <div style={{ maxWidth: 760 }}>
-      <h1 style={{ margin: "0 0 4px", color: "#0f172a", fontSize: 22, fontWeight: 700 }}>History</h1>
-      <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: 13 }}>Your food logs and MI risk assessments over time</p>
-
-      <div style={{ display: "flex", gap: 6, marginBottom: 20, background: "#f1f5f9", padding: 4, borderRadius: 10, width: "fit-content" }}>
-        <Tab active={tab === "food"}  onClick={() => setTab("food")}>Fat Intake Log</Tab>
-        <Tab active={tab === "risk"}  onClick={() => setTab("risk")}>MI Risk History</Tab>
+    <div className="container-fluid" style={{ maxWidth: "1280px" }}>
+      <div className="mb-5">
+        <h1 className="display-6 fw-bold text-white">History</h1>
+        <p className="text-white-50">Your food logs and MI risk assessments over time</p>
       </div>
 
-      {loading && <div style={{ color: "#94a3b8", fontSize: 13 }}>Loading…</div>}
+      {/* Tabs */}
+      <div className="d-flex gap-3 mb-4 flex-wrap">
+        <Tab active={tab === "food"} onClick={() => setTab("food")}>
+          <i className="bi bi-utensils me-2"></i>
+          Fat Intake Log
+        </Tab>
+        <Tab active={tab === "risk"} onClick={() => setTab("risk")}>
+          <i className="bi bi-heart-pulse me-2"></i>
+          MI Risk History
+        </Tab>
+      </div>
 
-      {/* Food log table */}
-      {!loading && tab === "food" && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#374151", fontWeight: 600 }}>
-            Daily saturated fat — last 30 days
+      {/* Food Log Tab */}
+      {tab === "food" && (
+        <div className="card border-0 shadow-lg" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+          <div className="card-header border-0 bg-transparent d-flex justify-content-between align-items-center p-4">
+            <h5 className="mb-0 fw-semibold text-white">Daily Saturated Fat — Last 30 Days</h5>
+            <span className="badge bg-success bg-opacity-10 text-success border border-success">
+              {foodLogs.length} days logged
+            </span>
           </div>
-          {foodLogs.length === 0
-            ? <div style={{ padding: 32, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No food logs yet. Go to Log Food to get started.</div>
-            : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    {["Date", "Total Sat Fat (g)", "Meals"].map(h => (
-                      <th key={h} style={{ padding: "10px 20px", textAlign: "left", color: "#64748b", fontWeight: 600, fontSize: 12 }}>{h}</th>
-                    ))}
+
+          {loading ? (
+            <div className="p-5 text-center">
+              <div className="spinner-border text-success mb-3" role="status"></div>
+              <div className="text-white-50">Loading food logs...</div>
+            </div>
+          ) : foodLogs.length === 0 ? (
+            <div className="p-5 text-center text-white-50">
+              No food logs yet. Go to <span className="text-success">Log Food</span> to get started.
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-dark table-hover align-middle mb-0">
+                <thead className="table-dark">
+                  <tr>
+                    <th className="ps-4">Date</th>
+                    <th>Total Sat Fat</th>
+                    <th>Meals</th>
+                    <th className="pe-4">Intake Level</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {foodLogs.slice().reverse().map((row, i) => (
-                    <tr key={i} style={{ borderTop: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "12px 20px", color: "#374151" }}>{row.date}</td>
-                      <td style={{ padding: "12px 20px" }}>
-                        <span style={{
-                          fontWeight: 600,
-                          color: row.daily_sat_fat > 20 ? "#ef4444" : row.daily_sat_fat > 10 ? "#f59e0b" : "#10b981",
-                        }}>
-                          {row.daily_sat_fat.toFixed(2)}g
-                        </span>
-                        <div style={{ height: 4, background: "#e2e8f0", borderRadius: 2, marginTop: 4, width: 80 }}>
-                          <div style={{
-                            height: 4, borderRadius: 2,
-                            width: `${Math.min(row.daily_sat_fat / 30 * 100, 100)}%`,
-                            background: row.daily_sat_fat > 20 ? "#ef4444" : row.daily_sat_fat > 10 ? "#f59e0b" : "#10b981",
-                          }} />
-                        </div>
-                      </td>
-                      <td style={{ padding: "12px 20px", color: "#64748b" }}>{row.meal_count}</td>
-                    </tr>
-                  ))}
+                  {foodLogs.slice().reverse().map((row, i) => {
+                    const color = fatColor(row.daily_sat_fat);
+                    const pct = Math.min((row.daily_sat_fat / 30) * 100, 100);
+
+                    return (
+                      <tr key={i}>
+                        <td className="ps-4 fw-medium">{row.date}</td>
+                        <td>
+                          <span className="fw-bold fs-5" style={{ color }}>
+                            {row.daily_sat_fat.toFixed(2)}
+                            <span className="fs-6 fw-normal opacity-50 ms-1">g</span>
+                          </span>
+                        </td>
+                        <td className="text-white-50">{row.meal_count}</td>
+                        <td className="pe-4">
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="flex-grow-1">
+                              <div className="progress" style={{ height: "7px" }}>
+                                <div
+                                  className="progress-bar"
+                                  style={{ width: `${pct}%`, backgroundColor: color }}
+                                ></div>
+                              </div>
+                            </div>
+                            <span
+                              className="badge rounded-pill px-3 py-1"
+                              style={{
+                                backgroundColor: `${color}22`,
+                                color: color,
+                                border: `1px solid ${color}44`,
+                              }}
+                            >
+                              {row.daily_sat_fat > 20 ? "High" : row.daily_sat_fat > 10 ? "Moderate" : "Low"}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            )
-          }
+            </div>
+          )}
         </div>
       )}
 
-      {/* Risk history table */}
-      {!loading && tab === "risk" && (
-        <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", fontSize: 13, color: "#374151", fontWeight: 600 }}>
-            MI risk assessments — last 30
+      {/* MI Risk History Tab */}
+      {tab === "risk" && (
+        <div className="card border-0 shadow-lg" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+          <div className="card-header border-0 bg-transparent d-flex justify-content-between align-items-center p-4">
+            <h5 className="mb-0 fw-semibold text-white">MI Risk Assessments — Last 30 Days</h5>
+            <span className="badge bg-success bg-opacity-10 text-success border border-success">
+              {riskHistory.length} assessments
+            </span>
           </div>
-          {riskHistory.length === 0
-            ? <div style={{ padding: 32, textAlign: "center", color: "#94a3b8", fontSize: 13 }}>No assessments yet. Go to MI Risk Check to run your first assessment.</div>
-            : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: "#f8fafc" }}>
-                    {["Date", "Risk", "Score", "Fat (g)", "7d Avg", "Cholesterol", "BMI"].map(h => (
-                      <th key={h} style={{ padding: "10px 16px", textAlign: "left", color: "#64748b", fontWeight: 600, fontSize: 12 }}>{h}</th>
-                    ))}
+
+          {loading ? (
+            <div className="p-5 text-center">
+              <div className="spinner-border text-success mb-3" role="status"></div>
+              <div className="text-white-50">Loading risk history...</div>
+            </div>
+          ) : riskHistory.length === 0 ? (
+            <div className="p-5 text-center text-white-50">
+              No assessments yet. Go to <span className="text-success">MI Risk Check</span> to run your first one.
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-dark table-hover align-middle mb-0">
+                <thead className="table-dark">
+                  <tr>
+                    <th className="ps-4">Date</th>
+                    <th>Risk Level</th>
+                    <th>Score</th>
+                    <th>Fat (g)</th>
+                    <th>7d Avg</th>
+                    <th>Cholesterol</th>
+                    <th>BMI</th>
+                    <th>Systolic</th>
+                    <th className="pe-4">Diastolic</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {riskHistory.map((row, i) => (
-                    <tr key={i} style={{ borderTop: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "12px 16px", color: "#374151" }}>{row.date}</td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <span style={{
-                          padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
-                          background: RISK_BG[row.mi_risk_category],
-                          color:      RISK_COLOR[row.mi_risk_category],
-                        }}>
-                          {row.mi_risk_category}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px 16px", fontWeight: 600, color: RISK_COLOR[row.mi_risk_category] }}>
-                        {row.mi_risk_pct?.toFixed(1)}%
-                      </td>
-                      <td style={{ padding: "12px 16px", color: "#64748b" }}>{row.fat_g?.toFixed(1)}</td>
-                      <td style={{ padding: "12px 16px", color: "#64748b" }}>{row.avg_fat_7d?.toFixed(1) ?? "—"}</td>
-                      <td style={{ padding: "12px 16px", color: "#64748b" }}>{row.cholesterol}</td>
-                      <td style={{ padding: "12px 16px", color: "#64748b" }}>{row.bmi?.toFixed(1)}</td>
-                    </tr>
-                  ))}
+                  {riskHistory.map((row, i) => {
+                    const cat = row.mi_risk_category;
+                    return (
+                      <tr key={i}>
+                        <td className="ps-4 fw-medium">{row.date}</td>
+                        <td>
+                          <span
+                            className="badge rounded-pill px-3 py-1"
+                            style={{
+                              background: `${RC[cat]}22`,
+                              color: RC[cat],
+                              border: `1px solid ${RC[cat]}44`,
+                            }}
+                          >
+                            {cat}
+                          </span>
+                        </td>
+                        <td className="fw-bold fs-5" style={{ color: RC[cat] }}>
+                          {row.mi_risk_pct?.toFixed(1)}
+                          <span className="fs-6 fw-normal opacity-50">%</span>
+                        </td>
+                        <td className="text-success fw-semibold">{row.fat_g?.toFixed(1)}</td>
+                        <td className="text-white-50">{row.avg_fat_7d?.toFixed(1) ?? "—"}</td>
+                        <td className="text-white-50">{row.cholesterol}</td>
+                        <td className="text-white-50">{row.bmi?.toFixed(1)}</td>
+                        <td className="text-white-50">{row.systolic}</td>
+                        <td className="pe-4 text-white-50">{row.diastolic}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            )
-          }
+            </div>
+          )}
         </div>
       )}
     </div>

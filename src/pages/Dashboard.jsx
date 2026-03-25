@@ -1,77 +1,76 @@
-// src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useAuth, API_BASE } from "../App";
 
-const RISK_COLOR = { Low: "#10b981", Moderate: "#f59e0b", High: "#ef4444" };
-const RISK_BG    = { Low: "#d1fae5", Moderate: "#fef3c7", High: "#fee2e2" };
+const RC = { Low: "#10b981", Moderate: "#f59e0b", High: "#ef4444" };
 
-function StatCard({ label, value, unit, sub, color = "#1e3a5f" }) {
+function StatCard({ label, value, unit, sub, accent = "#0ec3af" }) {
   return (
-    <div style={{
-      background: "#fff", borderRadius: 12, padding: "20px 24px",
-      border: "1px solid #e2e8f0", flex: 1, minWidth: 160,
-    }}>
-      <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 8, textTransform: "uppercase", letterSpacing: .5 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>
-        {value ?? "—"}
-        {unit && <span style={{ fontSize: 14, fontWeight: 400, marginLeft: 4, color: "#94a3b8" }}>{unit}</span>}
+    <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+      <div className="card-body p-4">
+        <div className="text-uppercase small text-white fw-semibold mb-2">{label}</div>
+        <div className="display-5 fw-bold text-white mb-1">
+          {value ?? "—"}
+          {unit && <span className="fs-5 fw-normal opacity-50 ms-1">{unit}</span>}
+        </div>
+        {sub && <div className="small opacity-50">{sub}</div>}
       </div>
-      {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>{sub}</div>}
+      <div className="card-footer border-0 bg-transparent pt-0 pb-3">
+        <div style={{ height: 3, background: `linear-gradient(90deg,${accent},transparent)`, borderRadius: 3 }} />
+      </div>
     </div>
   );
 }
 
 function MiniBar({ label, value, max }) {
-  const pct = Math.min((value / max) * 100, 100);
+  const pct = Math.min((value / Math.max(max, 0.1)) * 100, 100);
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-        <span style={{ color: "#374151", fontWeight: 500 }}>{label}</span>
-        <span style={{ color: "#6b7280" }}>{value.toFixed(1)} g</span>
+    <div className="mb-3">
+      <div className="d-flex justify-content-between small mb-1">
+        <span className="text-white-50">{label}</span>
+        <span className="text-success fw-semibold">{value.toFixed(1)}g</span>
       </div>
-      <div style={{ height: 6, background: "#e2e8f0", borderRadius: 4 }}>
-        <div style={{ width: `${pct}%`, height: 6, background: "#3b82f6", borderRadius: 4, transition: "width .6s" }} />
+      <div className="progress" style={{ height: "6px" }}>
+        <div className="progress-bar bg-gradient" style={{ width: `${pct}%`, background: "linear-gradient(90deg,#0ec3af,#6366f1)" }} />
       </div>
     </div>
   );
 }
 
 function FatChart({ trend }) {
-  if (!trend || trend.length === 0) return (
-    <div style={{ height: 120, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 13 }}>
-      No food logs yet
-    </div>
-  );
-  const max   = Math.max(...trend.map(d => d.daily_sat_fat), 1);
-  const W     = 420, H = 110, pad = 24;
-  const pts   = trend.map((d, i) => {
-    const x = pad + (i / Math.max(trend.length - 1, 1)) * (W - pad * 2);
+  if (!trend || trend.length === 0) {
+    return (
+      <div className="d-flex flex-column align-items-center justify-content-center py-5 text-center">
+        <i className="bi bi-graph-up fs-1 opacity-25 mb-3"></i>
+        <div className="text-white-50">No food logs yet</div>
+      </div>
+    );
+  }
+
+  // Simple SVG chart (kept as is for now, can be replaced with Chart.js later)
+  const max = Math.max(...trend.map(d => d.daily_sat_fat), 1);
+  const W = 500, H = 120, pad = 25;
+  const pts = trend.map((d, i) => {
+    const x = pad + (i / (trend.length - 1)) * (W - pad * 2);
     const y = H - pad - ((d.daily_sat_fat / max) * (H - pad * 2));
     return `${x},${y}`;
   });
-  const pathD = `M ${pts.join(" L ")}`;
-  const areaD = `M ${pts[0]} L ${pts.join(" L ")} L ${pts[pts.length-1].split(",")[0]},${H-pad} L ${pts[0].split(",")[0]},${H-pad} Z`;
+  const path = `M ${pts.join(" L ")}`;
+  const area = `M ${pts[0]} L ${pts.join(" L ")} L ${pts[pts.length-1].split(",")[0]},${H-pad} L ${pts[0].split(",")[0]},${H-pad} Z`;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 110 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-100" style={{ height: 130 }}>
       <defs>
-        <linearGradient id="fatGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0ec3af" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#0ec3af" stopOpacity="0.02" />
         </linearGradient>
       </defs>
-      <path d={areaD} fill="url(#fatGrad)" />
-      <path d={pathD} fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={area} fill="url(#areaGrad)" />
+      <path d={path} fill="none" stroke="#0ec3af" strokeWidth="3" strokeLinecap="round" />
       {trend.map((d, i) => {
         const [x, y] = pts[i].split(",").map(Number);
-        return <circle key={i} cx={x} cy={y} r={3} fill="#3b82f6" />;
+        return <circle key={i} cx={x} cy={y} r="4" fill="#0ec3af" stroke="#060d1a" strokeWidth="2" />;
       })}
-      <text x={pad} y={H - 6} fontSize="9" fill="#94a3b8">
-        {trend[0]?.date?.slice(5)}
-      </text>
-      <text x={W - pad} y={H - 6} fontSize="9" fill="#94a3b8" textAnchor="end">
-        {trend[trend.length - 1]?.date?.slice(5)}
-      </text>
     </svg>
   );
 }
@@ -91,141 +90,138 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 300 }}>
-      <div style={{ color: "#94a3b8", fontSize: 14 }}>Loading dashboard…</div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="d-flex align-items-center justify-content-center py-5">
+        <div className="spinner-border text-success me-3" role="status" />
+        Loading dashboard...
+      </div>
+    );
+  }
 
   const risk = data?.latest_mi_risk;
 
   return (
-    <div style={{ maxWidth: 900 }}>
-      <h1 style={{ margin: "0 0 4px", color: "#0f172a", fontSize: 22, fontWeight: 700 }}>Dashboard</h1>
-      <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 13 }}>Your daily fat intake and MI risk overview</p>
-
-      {/* Stat row */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-        <StatCard
-          label="Today's Sat Fat"
-          value={data?.today_sat_fat_g?.toFixed(1)}
-          unit="g"
-          sub="Saturated fat logged today"
-          color="#1e3a5f"
-        />
-        <StatCard
-          label="7-Day Avg"
-          value={data?.avg_7d_sat_fat_g?.toFixed(1) ?? "—"}
-          unit="g/day"
-          sub="Rolling weekly average"
-          color="#2563eb"
-        />
-        <StatCard
-          label="30-Day Avg"
-          value={data?.avg_30d_sat_fat_g?.toFixed(1) ?? "—"}
-          unit="g/day"
-          sub="Monthly average"
-          color="#7c3aed"
-        />
-        <StatCard
-          label="Meals Logged"
-          value={data?.total_meals}
-          sub={`across ${data?.active_days} active days`}
-          color="#0f766e"
-        />
+    <div className="container-fluid" style={{ maxWidth: "1280px" }}>
+      <div className="mb-5">
+        <h1 className="display-6 fw-bold text-white">Dashboard</h1>
+        <p className="text-white-50">Daily fat intake and MI risk overview</p>
       </div>
 
-      {/* MI risk + fat chart row */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 24 }}>
-
-        {/* MI Risk card */}
-        <div style={{
-          background: "#fff", borderRadius: 12, padding: "24px", border: "1px solid #e2e8f0",
-          minWidth: 200, flex: "0 0 220px",
-        }}>
-          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 16, textTransform: "uppercase", letterSpacing: .5 }}>
-            Latest MI Risk
-          </div>
-          {risk?.category ? (
-            <>
-              <div style={{
-                display: "inline-block", padding: "4px 14px", borderRadius: 20,
-                background: RISK_BG[risk.category], color: RISK_COLOR[risk.category],
-                fontWeight: 700, fontSize: 13, marginBottom: 12,
-              }}>
-                {risk.category}
-              </div>
-              <div style={{ fontSize: 38, fontWeight: 800, color: RISK_COLOR[risk.category], lineHeight: 1, marginBottom: 8 }}>
-                {risk.percentage?.toFixed(0)}
-                <span style={{ fontSize: 18, fontWeight: 400, color: "#94a3b8" }}>%</span>
-              </div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>Assessed {risk.date}</div>
-            </>
-          ) : (
-            <div style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6 }}>
-              No assessment yet.<br />Go to <strong>MI Risk Check</strong> to get started.
-            </div>
-          )}
+      {/* Stats Row */}
+      <div className="row g-4 mb-5">
+        <div className="col-lg-3 col-md-6">
+          <StatCard label="Today's Sat Fat" value={data?.today_sat_fat_g?.toFixed(1)} unit="g" sub="Logged today" />
         </div>
-
-        {/* Fat trend chart */}
-        <div style={{
-          background: "#fff", borderRadius: 12, padding: "24px", border: "1px solid #e2e8f0", flex: 1, minWidth: 280,
-        }}>
-          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: .5 }}>
-            30-Day Saturated Fat Trend
-          </div>
-          <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 14 }}>Daily total (g)</div>
-          <FatChart trend={data?.fat_trend_30d} />
+        <div className="col-lg-3 col-md-6">
+          <StatCard label="7-Day Average" value={data?.avg_7d_sat_fat_g?.toFixed(1)} unit="g/day" sub="Rolling weekly" accent="#6366f1" />
+        </div>
+        <div className="col-lg-3 col-md-6">
+          <StatCard label="30-Day Average" value={data?.avg_30d_sat_fat_g?.toFixed(1)} unit="g/day" sub="Monthly trend" accent="#8b5cf6" />
+        </div>
+        <div className="col-lg-3 col-md-6">
+          <StatCard label="Meals Logged" value={data?.total_meals} sub={`across ${data?.active_days ?? 0} active days`} />
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-
-        {/* Top foods */}
-        <div style={{
-          background: "#fff", borderRadius: 12, padding: "24px", border: "1px solid #e2e8f0", flex: 1, minWidth: 240,
-        }}>
-          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 16, textTransform: "uppercase", letterSpacing: .5 }}>
-            Top Foods (30 days)
-          </div>
-          {data?.top_foods?.length
-            ? data.top_foods.map((f, i) => (
-                <MiniBar
-                  key={i}
-                  label={`${f.food} ×${f.frequency}`}
-                  value={f.avg_sat_fat}
-                  max={Math.max(...data.top_foods.map(x => x.avg_sat_fat), 1)}
-                />
-              ))
-            : <div style={{ color: "#94a3b8", fontSize: 13 }}>Log food to see breakdown</div>
-          }
-        </div>
-
-        {/* Recent logs */}
-        <div style={{
-          background: "#fff", borderRadius: 12, padding: "24px", border: "1px solid #e2e8f0", flex: 1, minWidth: 240,
-        }}>
-          <div style={{ fontSize: 12, color: "#64748b", fontWeight: 600, marginBottom: 16, textTransform: "uppercase", letterSpacing: .5 }}>
-            Recent Meals
-          </div>
-          {data?.recent_foods?.length
-            ? data.recent_foods.map((f, i) => (
-                <div key={i} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "8px 0", borderBottom: i < data.recent_foods.length - 1 ? "1px solid #f1f5f9" : "none",
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 500, fontSize: 13, color: "#1e293b" }}>{f.food}</div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>{f.method} · {f.weight_g}g · {f.date}</div>
+      <div className="row g-4">
+        {/* Latest MI Risk */}
+        <div className="col-lg-4">
+          <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+            <div className="card-body p-4">
+              <div className="text-uppercase small text-white fw-semibold mb-3">Latest MI Risk</div>
+              {risk?.category ? (
+                <>
+                  <div className="d-inline-block px-3 py-1 rounded-pill mb-3" style={{ background: "rgba(16,185,129,0.15)", color: RC[risk.category], border: `1px solid ${RC[risk.category]}40` }}>
+                    {risk.category}
                   </div>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: "#3b82f6" }}>{f.sat_fat_g.toFixed(2)}g</div>
-                </div>
-              ))
-            : <div style={{ color: "#94a3b8", fontSize: 13 }}>No meals logged yet</div>
-          }
+                  <div className="display-4 fw-bold" style={{ color: RC[risk.category] }}>
+                    {risk.percentage?.toFixed(0)}<span className="fs-5 fw-normal opacity-50">%</span>
+                  </div>
+                  <div className="small text-white-50 mt-2">Assessed {risk.date}</div>
+                </>
+              ) : (
+                <div className="text-white-50 py-4">No assessment yet.<br />Go to <span className="text-success">MI Risk Check</span></div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* 30-Day Trend */}
+        <div className="col-lg-8">
+          <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+            <div className="card-body p-4">
+              <div className="d-flex justify-content-between mb-4">
+                <div>
+                  <div className="text-uppercase small text-white fw-semibold">30-Day Sat Fat Trend</div>
+                  <div className="small text-white-50">Daily total (g)</div>
+                </div>
+                <div className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Last 30 days</div>
+              </div>
+              <FatChart trend={data?.fat_trend_30d} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="row g-4 mt-4">
+        <div className="col-lg-4">
+          <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+            <div className="card-body p-4">
+              <div className="text-uppercase small text-white fw-semibold mb-4">Top Foods (30 days)</div>
+              {data?.top_foods?.length ? (
+                data.top_foods.map((f, i) => (
+                  <MiniBar key={i} label={`${f.food} ×${f.frequency}`} value={f.avg_sat_fat} max={Math.max(...data.top_foods.map(x => x.avg_sat_fat), 0.1)} />
+                ))
+              ) : (
+                <div className="text-white-50 py-4">Log food to see your fat breakdown</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-lg-4">
+          <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+            <div className="card-body p-4">
+              <div className="text-uppercase small text-white fw-semibold mb-4">Recent Meals</div>
+              {data?.recent_foods?.length ? (
+                data.recent_foods.map((f, i) => (
+                  <div key={i} className="d-flex justify-content-between align-items-center py-3 border-bottom border-light border-opacity-10">
+                    <div>
+                      <div className="fw-semibold text-white">{f.food}</div>
+                      <div className="small text-white-50">{f.method} · {f.weight_g}g · {f.date}</div>
+                    </div>
+                    <div className="text-success fw-bold">{f.sat_fat_g.toFixed(2)}g</div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-white-50 py-4">No meals logged yet.<br />Go to Log Food</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {data?.risk_trend?.length > 0 && (
+          <div className="col-lg-4">
+            <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
+              <div className="card-body p-4">
+                <div className="text-uppercase small text-white fw-semibold mb-4">Recent Risk Assessments</div>
+                {data.risk_trend.slice(0, 5).map((r, i) => (
+                  <div key={i} className="d-flex justify-content-between align-items-center py-3 border-bottom border-light border-opacity-10">
+                    <div className="small text-white-50">{r.date}</div>
+                    <div className="d-flex align-items-center gap-3">
+                      <span className="badge rounded-pill" style={{ background: "rgba(16,185,129,0.15)", color: RC[r.category], border: `1px solid ${RC[r.category]}40` }}>
+                        {r.category}
+                      </span>
+                      <span className="fw-bold" style={{ color: RC[r.category] }}>{r.risk_pct?.toFixed(0)}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
