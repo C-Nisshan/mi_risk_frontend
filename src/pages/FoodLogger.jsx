@@ -11,7 +11,6 @@ const FAT_DESC = { none: "No oil", low: "~5g oil", medium: "~10g oil", high: "~1
 /* ── Result Modal ─────────────────────────────────────────────── */
 function ResultModal({ result, onClose }) {
   if (!result) return null;
-
   const total = result.sat_fat_total_g;
   const rc = total > 15 ? "#ef4444" : total > 8 ? "#f59e0b" : "#10b981";
   const rl = total > 15 ? "High" : total > 8 ? "Moderate" : "Low";
@@ -21,12 +20,11 @@ function ResultModal({ result, onClose }) {
     <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(6,13,26,0.92)" }}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content border-0" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
-          
           {/* Header */}
           <div className="modal-header border-0 pb-0" style={{ background: "linear-gradient(135deg,rgba(14,195,175,0.12),rgba(99,102,241,0.08))" }}>
             <div className="d-flex align-items-center gap-3">
-              <div className="d-flex align-items-center justify-content-center rounded-3" 
-                   style={{ width: 48, height: 48, background: "linear-gradient(135deg,#0ec3af,#6366f1)" }}>
+              <div className="d-flex align-items-center justify-content-center rounded-3"
+                style={{ width: 48, height: 48, background: "linear-gradient(135deg,#0ec3af,#6366f1)" }}>
                 <i className="bi bi-check-lg fs-3 text-white"></i>
               </div>
               <div>
@@ -44,12 +42,13 @@ function ResultModal({ result, onClose }) {
             <div className="text-center mb-4">
               <div className="text-uppercase small opacity-50 fw-semibold mb-2">Total Saturated Fat</div>
               <div className="display-3 fw-bold" style={{ color: rc }}>
-                {total}
                 <span className="fs-4 fw-normal opacity-50 ms-2">g</span>
+                {total}
+                
               </div>
               <div className="mt-2">
-                <span className="badge rounded-pill px-3 py-2" 
-                      style={{ background: `${rc}22`, color: rc, border: `1px solid ${rc}44` }}>
+                <span className="badge rounded-pill px-3 py-2"
+                  style={{ background: `${rc}22`, color: rc, border: `1px solid ${rc}44` }}>
                   {rl} Saturated Fat
                 </span>
               </div>
@@ -109,7 +108,6 @@ function ResultModal({ result, onClose }) {
 export default function FoodLogger() {
   const { token, showToast } = useAuth();
   const fileRef = useRef();
-  
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [weight, setWeight] = useState(100);
@@ -150,7 +148,6 @@ export default function FoodLogger() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Prediction failed");
-      
       setResult(data);
     } catch (err) {
       showToast(err.message, "error");
@@ -163,7 +160,7 @@ export default function FoodLogger() {
     <div className="container-fluid" style={{ maxWidth: "720px" }}>
       <div className="mb-4">
         <h1 className="display-6 fw-bold text-white">Log Food</h1>
-        <p className="text-white-50">Upload a food photo to estimate saturated fat intake</p>
+        <p className="text-white">Upload a food photo to estimate saturated fat intake</p>
       </div>
 
       <div className="card border-0 shadow-lg" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
@@ -179,10 +176,10 @@ export default function FoodLogger() {
           onClick={() => fileRef.current.click()}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
-          onDrop={(e) => { 
-            e.preventDefault(); 
-            setDragging(false); 
-            handleFile(e.dataTransfer.files[0]); 
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            handleFile(e.dataTransfer.files[0]);
           }}
         >
           {preview ? (
@@ -200,8 +197,8 @@ export default function FoodLogger() {
           ) : (
             <>
               <i className="bi bi-camera-fill display-1 text-white-50 mb-3"></i>
-              <h5 className="text-white-75">Drop food photo here</h5>
-              <p className="text-white-50 small">or click to browse • JPG, PNG supported</p>
+              <h5 className="text-white">Drop food photo here</h5>
+              <p className="text-white small">or click to browse • JPG, PNG supported</p>
             </>
           )}
           <input
@@ -216,7 +213,9 @@ export default function FoodLogger() {
         <div className="px-4 pb-4">
           {/* Weight Input */}
           <div className="mb-4">
-            <label className="form-label text-uppercase small fw-semibold">Portion Weight (grams) *</label>
+            <label className="form-label text-white small fw-semibold">
+              Portion Weight (grams) *
+            </label>
             <div className="input-group">
               <input
                 type="number"
@@ -224,16 +223,17 @@ export default function FoodLogger() {
                 max="2000"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
-                className="form-control form-control-lg"
+                className="form-control form-control-lg text-white"
+                style={{ backgroundColor: "#212529", borderColor: "#495057" }}
               />
-              <span className="input-group-text">g</span>
+              <span className="input-group-text text-white" style={{ backgroundColor: "#343a40", borderColor: "#495057" }}>g</span>
             </div>
           </div>
 
           <div className="row g-4">
             {/* Cooking Method */}
             <div className="col-md-6">
-              <label className="form-label text-uppercase small fw-semibold opacity-75">Cooking Method</label>
+              <label className="form-label text-white small fw-semibold">Cooking Method</label>
               <select
                 value={method}
                 onChange={(e) => {
@@ -243,7 +243,8 @@ export default function FoodLogger() {
                     setOilType("");
                   }
                 }}
-                className="form-select form-select-lg"
+                className="form-select form-select-lg text-white"
+                style={{ backgroundColor: "#212529", borderColor: "#495057" }}
               >
                 <option value="">Auto-detect from image</option>
                 {METHODS.map((m) => (
@@ -256,15 +257,19 @@ export default function FoodLogger() {
 
             {/* Added Fat Level */}
             <div className="col-md-6">
-              <label className="form-label text-uppercase small fw-semibold opacity-75">
+              <label className="form-label text-white small fw-semibold">
                 Added Fat Level {oilDisabled && <span className="text-warning">(Not applicable)</span>}
               </label>
               <select
                 value={fatLevel}
                 disabled={oilDisabled}
                 onChange={(e) => setFatLevel(e.target.value)}
-                className="form-select form-select-lg"
-                style={{ opacity: oilDisabled ? 0.6 : 1 }}
+                className="form-select form-select-lg text-white"
+                style={{ 
+                  backgroundColor: "#212529", 
+                  borderColor: "#495057",
+                  opacity: oilDisabled ? 0.85 : 1 
+                }}
               >
                 <option value="">Auto-infer from image</option>
                 {FAT_LEVELS.map((f) => (
@@ -279,11 +284,12 @@ export default function FoodLogger() {
           {/* Oil Type */}
           {!oilDisabled && (
             <div className="mt-4">
-              <label className="form-label text-uppercase small fw-semibold opacity-75">Oil Type</label>
+              <label className="form-label text-white small fw-semibold">Oil Type</label>
               <select
                 value={oilType}
                 onChange={(e) => setOilType(e.target.value)}
-                className="form-select form-select-lg"
+                className="form-select form-select-lg text-white"
+                style={{ backgroundColor: "#212529", borderColor: "#495057" }}
               >
                 <option value="">Default for selected method</option>
                 {OIL_TYPES.map((o) => (

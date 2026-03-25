@@ -104,7 +104,7 @@ function ResultModal({ result, onClose }) {
               <div className="mt-4 p-3 rounded-3" style={{ background: "rgba(14,195,175,0.08)", border: "1px solid rgba(14,195,175,0.2)" }}>
                 <div className="small opacity-75">Dietary Fat Used</div>
                 <div className="fw-semibold">
-                  {result.fat_intake_used.value_g?.toFixed(1)} g/day 
+                  {result.fat_intake_used.value_g?.toFixed(1)} g/day
                   <span className="ms-2 small opacity-50">
                     via {(result.fat_intake_used.source || "").replace(/_/g, " ")}
                   </span>
@@ -118,7 +118,7 @@ function ResultModal({ result, onClose }) {
                 {result.top_risk_factors.map((f, i) => (
                   <div key={i} className="d-flex gap-3 mb-3 p-3 rounded-3 bg-dark border">
                     <div className="flex-shrink-0 w-8 h-8 rounded-2 d-flex align-items-center justify-content-center fw-bold"
-                         style={{ background: `linear-gradient(135deg,${RC[cat]}33,${RC[cat]}11)`, color: RC[cat] }}>
+                      style={{ background: `linear-gradient(135deg,${RC[cat]}33,${RC[cat]}11)`, color: RC[cat] }}>
                       {i + 1}
                     </div>
                     <div className="flex-grow-1">
@@ -169,9 +169,9 @@ export default function MIRiskForm() {
 
       const res = await fetch(`${API_BASE}/mi/predict`, {
         method: "POST",
-        headers: { 
-          Authorization: `Bearer ${token}`, 
-          "Content-Type": "application/json" 
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(body),
       });
@@ -216,16 +216,31 @@ export default function MIRiskForm() {
           step={f.step || "1"}
           min={f.min}
           max={f.max}
-          placeholder={isOpt ? "Leave blank to auto-calculate from logs" : `Enter value (${f.min}–${f.max})`}
+          placeholder={
+            isOpt
+              ? "Leave blank to auto-calculate from logs"
+              : `Enter value (${f.min}–${f.max})`
+          }
           value={isOpt ? manualFat : values[f.key]}
           onChange={(e) => isOpt ? setManualFat(e.target.value) : set(f.key, e.target.value)}
-          className="form-control pe-5"   // padding-right for unit
-          style={{ color: "#fff" }}
+          // ── FIX 1: white placeholder via className + injected <style> above ──
+          className="form-control text-white mi-risk-input"
+          // ── FIX 2: right padding reserves space for unit badge + spinner arrows ──
+          style={{ paddingRight: f.unit ? "88px" : "2rem", color: "#ffffff" }}
         />
+        {/* ── FIX 2: unit badge sits LEFT of the native spinner arrows (~28px wide) ── */}
         {f.unit && (
-          <span 
-            className="position-absolute top-50 translate-middle-y text-white-50 small"
-            style={{ right: "14px", fontSize: "0.875rem" }}
+          <span
+            className="position-absolute top-50 translate-middle-y small fw-semibold"
+            style={{
+              right: "30px",          /* 30px clears the native ▲▼ spinner buttons */
+              color: "#ffffff",
+              pointerEvents: "none",
+              userSelect: "none",
+              fontSize: "0.78rem",
+              whiteSpace: "nowrap",
+              opacity: 0.85,
+            }}
           >
             {f.unit}
           </span>
@@ -239,9 +254,20 @@ export default function MIRiskForm() {
 
   return (
     <div className="container-fluid py-4" style={{ maxWidth: "900px" }}>
+
+      {/* ── FIX 1: inject ::placeholder rule — inline styles cannot target pseudo-elements ── */}
+      <style>{`
+        .mi-risk-input::placeholder {
+          color: rgba(255, 255, 255, 0.75) !important;
+          opacity: 1;                  /* Firefox resets opacity by default */
+        }
+      `}</style>
+
       <div className="mb-4">
         <h1 className="h3 fw-bold text-white">MI Risk Assessment</h1>
-        <p className="text-muted small">Enter your clinical data. Saturated fat is auto-pulled from food logs when possible.</p>
+        <p className="text-white small">
+          Enter your clinical data. Saturated fat is auto-pulled from food logs when possible.
+        </p>
       </div>
 
       <div className="card shadow-lg">
@@ -261,8 +287,8 @@ export default function MIRiskForm() {
                   ${i === step ? "bg-success bg-opacity-10 text-success border border-success" : "btn-outline-secondary"}`}
                 disabled={i > step}
               >
-                <div className="d-flex align-items-center justify-content-center rounded-circle" 
-                     style={{ width: 32, height: 32, background: i < step ? "#0ec3af" : "rgba(255,255,255,0.1)" }}>
+                <div className="d-flex align-items-center justify-content-center rounded-circle"
+                  style={{ width: 32, height: 32, background: i < step ? "#0ec3af" : "rgba(255,255,255,0.1)" }}>
                   {i < step ? <i className="bi bi-check-lg"></i> : <i className={s.icon}></i>}
                 </div>
                 <span className="small fw-semibold d-none d-sm-inline">{s.title}</span>
@@ -275,16 +301,16 @@ export default function MIRiskForm() {
         <div className="p-4">
           <div className="mb-4">
             <h4 className="fw-bold text-white">{currentStep.title}</h4>
-            <p className="text-muted small mb-0">{currentStep.subtitle}</p>
+            <p className="text-white small mb-0">{currentStep.subtitle}</p>
           </div>
 
           <div className="row g-4">
             <div className={rightFields.length ? "col-md-6" : "col-12"}>
               {leftFields.map(f => (
                 <div key={f.key} className="mb-4">
-                  <label className="form-label text-uppercase small fw-semibold opacity-75">
+                  <label className="form-label text-white small fw-semibold">
                     {f.label}
-                    {f.optional && <span className="ms-1 opacity-50">(optional)</span>}
+                    {f.optional && <span className="ms-1 text-white-50">(optional)</span>}
                   </label>
                   {renderField(f)}
                 </div>
@@ -295,7 +321,7 @@ export default function MIRiskForm() {
               <div className="col-md-6">
                 {rightFields.map(f => (
                   <div key={f.key} className="mb-4">
-                    <label className="form-label text-uppercase small fw-semibold opacity-75">
+                    <label className="form-label text-white small fw-semibold">
                       {f.label}
                     </label>
                     {renderField(f)}
@@ -320,7 +346,7 @@ export default function MIRiskForm() {
               ← Back
             </button>
 
-            <div className="small text-muted">
+            <div className="small text-white">
               Step {step + 1} of {STEPS.length}
             </div>
 

@@ -45,12 +45,12 @@ body {
 }
 
 .form-control::placeholder {
-  color: #64748b !important;   /* Visible but subtle placeholder */
+  color: #ffffff !important;   /* Visible but subtle placeholder */
 }
 
 /* Labels */
 .form-label {
-  color: #e2e8f0 !important;
+  color: #ffffff !important;
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;

@@ -7,7 +7,7 @@ function StatCard({ label, value, unit, sub, accent = "#0ec3af" }) {
   return (
     <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
       <div className="card-body p-4">
-        <div className="text-uppercase small opacity-50 fw-semibold mb-2">{label}</div>
+        <div className="text-uppercase small text-white fw-semibold mb-2">{label}</div>
         <div className="display-5 fw-bold text-white mb-1">
           {value ?? "—"}
           {unit && <span className="fs-5 fw-normal opacity-50 ms-1">{unit}</span>}
@@ -129,7 +129,7 @@ export default function Dashboard() {
         <div className="col-lg-4">
           <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
             <div className="card-body p-4">
-              <div className="text-uppercase small opacity-50 fw-semibold mb-3">Latest MI Risk</div>
+              <div className="text-uppercase small text-white fw-semibold mb-3">Latest MI Risk</div>
               {risk?.category ? (
                 <>
                   <div className="d-inline-block px-3 py-1 rounded-pill mb-3" style={{ background: "rgba(16,185,129,0.15)", color: RC[risk.category], border: `1px solid ${RC[risk.category]}40` }}>
@@ -153,7 +153,7 @@ export default function Dashboard() {
             <div className="card-body p-4">
               <div className="d-flex justify-content-between mb-4">
                 <div>
-                  <div className="text-uppercase small opacity-50 fw-semibold">30-Day Sat Fat Trend</div>
+                  <div className="text-uppercase small text-white fw-semibold">30-Day Sat Fat Trend</div>
                   <div className="small text-white-50">Daily total (g)</div>
                 </div>
                 <div className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Last 30 days</div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
         <div className="col-lg-4">
           <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
             <div className="card-body p-4">
-              <div className="text-uppercase small opacity-50 fw-semibold mb-4">Top Foods (30 days)</div>
+              <div className="text-uppercase small text-white fw-semibold mb-4">Top Foods (30 days)</div>
               {data?.top_foods?.length ? (
                 data.top_foods.map((f, i) => (
                   <MiniBar key={i} label={`${f.food} ×${f.frequency}`} value={f.avg_sat_fat} max={Math.max(...data.top_foods.map(x => x.avg_sat_fat), 0.1)} />
@@ -184,7 +184,7 @@ export default function Dashboard() {
         <div className="col-lg-4">
           <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
             <div className="card-body p-4">
-              <div className="text-uppercase small opacity-50 fw-semibold mb-4">Recent Meals</div>
+              <div className="text-uppercase small text-white fw-semibold mb-4">Recent Meals</div>
               {data?.recent_foods?.length ? (
                 data.recent_foods.map((f, i) => (
                   <div key={i} className="d-flex justify-content-between align-items-center py-3 border-bottom border-light border-opacity-10">
@@ -206,7 +206,7 @@ export default function Dashboard() {
           <div className="col-lg-4">
             <div className="card h-100 border-0 shadow-sm" style={{ background: "linear-gradient(145deg,#0d1b2e,#091524)" }}>
               <div className="card-body p-4">
-                <div className="text-uppercase small opacity-50 fw-semibold mb-4">Recent Risk Assessments</div>
+                <div className="text-uppercase small text-white fw-semibold mb-4">Recent Risk Assessments</div>
                 {data.risk_trend.slice(0, 5).map((r, i) => (
                   <div key={i} className="d-flex justify-content-between align-items-center py-3 border-bottom border-light border-opacity-10">
                     <div className="small text-white-50">{r.date}</div>
