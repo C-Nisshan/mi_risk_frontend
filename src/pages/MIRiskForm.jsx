@@ -11,13 +11,13 @@ const STEPS = [
     title: "Clinical Vitals",
     subtitle: "Core measurements from your last checkup",
     fields: [
-      { key: "age", label: "Age", type: "number", unit: "years", min: 18, max: 90, col: 1 },
-      { key: "cholesterol", label: "Total Cholesterol", type: "number", unit: "mg/dL", min: 50, max: 400, col: 2 },
-      { key: "heart_rate", label: "Heart Rate", type: "number", unit: "bpm", min: 30, max: 200, col: 1 },
-      { key: "systolic", label: "Systolic BP", type: "number", unit: "mmHg", min: 80, max: 200, col: 2 },
-      { key: "diastolic", label: "Diastolic BP", type: "number", unit: "mmHg", min: 40, max: 130, col: 1 },
-      { key: "bmi", label: "BMI", type: "number", step: "0.1", min: 10, max: 60, col: 2 },
-      { key: "triglycerides", label: "Triglycerides", type: "number", unit: "mg/dL", min: 20, max: 800, col: 1 },
+      { key: "age", label: "Age", type: "number", unit: "years", min: 18, max: 90, col: 1, required: true },
+      { key: "cholesterol", label: "Total Cholesterol", type: "number", unit: "mg/dL", min: 50, max: 400, col: 2, required: true },
+      { key: "heart_rate", label: "Heart Rate", type: "number", unit: "bpm", min: 30, max: 200, col: 1, required: true },
+      { key: "systolic", label: "Systolic BP", type: "number", unit: "mmHg", min: 80, max: 200, col: 2, required: true },
+      { key: "diastolic", label: "Diastolic BP", type: "number", unit: "mmHg", min: 40, max: 130, col: 1, required: true },
+      { key: "bmi", label: "BMI", type: "number", step: "0.1", min: 10, max: 60, col: 2, required: true },
+      { key: "triglycerides", label: "Triglycerides", type: "number", unit: "mg/dL", min: 20, max: 800, col: 1, required: true },
     ],
   },
   {
@@ -39,10 +39,10 @@ const STEPS = [
     title: "Lifestyle",
     subtitle: "Daily activity and sleep patterns",
     fields: [
-      { key: "exercise_hours_per_week", label: "Exercise", type: "number", unit: "hrs/week", min: 0, max: 30, col: 1 },
-      { key: "sedentary_hours_per_day", label: "Sedentary Time", type: "number", unit: "hrs/day", min: 0, max: 20, col: 2 },
-      { key: "physical_activity_days", label: "Active Days per Week", type: "number", unit: "days/wk", min: 0, max: 7, col: 1 },
-      { key: "sleep_hours_per_day", label: "Sleep", type: "number", unit: "hrs/day", min: 2, max: 12, step: "0.5", col: 2 },
+      { key: "exercise_hours_per_week", label: "Exercise", type: "number", unit: "hrs/week", min: 0, max: 30, col: 1, required: true },
+      { key: "sedentary_hours_per_day", label: "Sedentary Time", type: "number", unit: "hrs/day", min: 0, max: 20, col: 2, required: true },
+      { key: "physical_activity_days", label: "Active Days per Week", type: "number", unit: "days/wk", min: 0, max: 7, col: 1, required: true },
+      { key: "sleep_hours_per_day", label: "Sleep", type: "number", unit: "hrs/day", min: 2, max: 12, step: "0.5", col: 2, required: true },
     ],
   },
   {
@@ -59,7 +59,6 @@ const STEPS = [
 function ResultModal({ result, onClose }) {
   if (!result) return null;
   const cat = result.mi_risk_category;
-
   return (
     <div className="modal show d-block" tabIndex="-1" style={{ background: "rgba(6,13,26,0.92)" }}>
       <div className="modal-dialog modal-dialog-centered modal-lg">
@@ -85,7 +84,6 @@ function ResultModal({ result, onClose }) {
             </div>
             <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
-
           <div className="modal-body">
             <h6 className="text-uppercase small opacity-50 mb-3">Class Probabilities</h6>
             {Object.entries(result.class_probabilities).map(([cls, p]) => (
@@ -132,7 +130,6 @@ function ResultModal({ result, onClose }) {
               </div>
             )}
           </div>
-
           <div className="modal-footer border-0">
             <button className="btn btn-success w-100 py-3 fw-semibold" onClick={onClose}>
               Close
@@ -156,14 +153,95 @@ export default function MIRiskForm() {
   const [manualFat, setManualFat] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [errors, setErrors] = useState({});
 
-  const set = (k, v) => setValues(p => ({ ...p, [k]: v }));
+  const set = (k, v) => {
+    setValues(p => ({ ...p, [k]: v }));
+    // Clear error when user starts typing
+    if (errors[k]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[k];
+        return newErrors;
+      });
+    }
+  };
+
+  // Validation function (only for Clinical Vitals and Lifestyle)
+  const validateStep = (currentStep) => {
+    const newErrors = {};
+    const stepConfig = STEPS[currentStep];
+
+    stepConfig.fields.forEach(field => {
+      if (!field.required) return;
+
+      const value = values[field.key];
+      let numValue = null;
+
+      if (field.type === "number") {
+        if (value === "" || value === null || value === undefined) {
+          newErrors[field.key] = `${field.label} is required`;
+        } else {
+          numValue = parseFloat(value);
+          if (isNaN(numValue)) {
+            newErrors[field.key] = `${field.label} must be a valid number`;
+          } else if (numValue < field.min || numValue > field.max) {
+            newErrors[field.key] = `${field.label} must be between ${field.min} and ${field.max}`;
+          }
+        }
+      }
+      // For toggles we consider 0 as valid (No)
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const goToNext = () => {
+    if (step < STEPS.length - 1) {
+      const isValid = validateStep(step);
+      if (isValid) {
+        setStep(s => s + 1);
+      } else {
+        showToast("Please fix the errors in the current step before continuing.", "error");
+      }
+    }
+  };
+
+  const goToStep = (targetStep) => {
+    if (targetStep <= step) {
+      setStep(targetStep);
+      return;
+    }
+
+    // For jumping forward, validate all steps in between
+    let isValid = true;
+    for (let i = step; i < targetStep; i++) {
+      if (!validateStep(i)) {
+        isValid = false;
+        break;
+      }
+    }
+
+    if (isValid) {
+      setStep(targetStep);
+    } else {
+      showToast("Please complete all previous steps correctly before jumping ahead.", "error");
+    }
+  };
 
   const submit = async () => {
+    // Final validation before submit
+    const isValid = validateStep(step);
+    if (!isValid) {
+      showToast("Please fix the errors in the current step before submitting.", "error");
+      return;
+    }
+
     setLoading(true);
     try {
       const body = { ...values };
-      if (manualFat !== "" && manualFat !== null) {
+      if (manualFat !== "" && manualFat !== null && manualFat.trim() !== "") {
         body.daily_fat_intake_g = parseFloat(manualFat);
       }
 
@@ -178,6 +256,7 @@ export default function MIRiskForm() {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Prediction failed");
+
       setResult(data);
     } catch (err) {
       showToast(err.message, "error");
@@ -190,6 +269,9 @@ export default function MIRiskForm() {
   const progress = ((step + 1) / STEPS.length) * 100;
 
   const renderField = (f) => {
+    const hasError = !!errors[f.key];
+    const errorMessage = errors[f.key];
+
     if (f.type === "toggle") {
       return (
         <div className="d-flex gap-2">
@@ -222,19 +304,26 @@ export default function MIRiskForm() {
               : `Enter value (${f.min}–${f.max})`
           }
           value={isOpt ? manualFat : values[f.key]}
-          onChange={(e) => isOpt ? setManualFat(e.target.value) : set(f.key, e.target.value)}
-          // ── FIX 1: white placeholder via className + injected <style> above ──
-          className="form-control text-white mi-risk-input"
-          // ── FIX 2: right padding reserves space for unit badge + spinner arrows ──
-          style={{ paddingRight: f.unit ? "88px" : "2rem", color: "#ffffff" }}
+          onChange={(e) => {
+            if (isOpt) {
+              setManualFat(e.target.value);
+            } else {
+              set(f.key, e.target.value);
+            }
+          }}
+          className={`form-control text-white mi-risk-input ${hasError ? "is-invalid" : ""}`}
+          style={{ 
+            paddingRight: f.unit ? "88px" : "2rem", 
+            color: "#ffffff",
+            borderColor: hasError ? "#ef4444" : undefined 
+          }}
         />
-        {/* ── FIX 2: unit badge sits LEFT of the native spinner arrows (~28px wide) ── */}
         {f.unit && (
           <span
             className="position-absolute top-50 translate-middle-y small fw-semibold"
             style={{
-              right: "30px",          /* 30px clears the native ▲▼ spinner buttons */
-              color: "#ffffff",
+              right: "30px",
+              color: hasError ? "#ef4444" : "#ffffff",
               pointerEvents: "none",
               userSelect: "none",
               fontSize: "0.78rem",
@@ -245,6 +334,12 @@ export default function MIRiskForm() {
             {f.unit}
           </span>
         )}
+
+        {hasError && (
+          <div className="invalid-feedback d-block small mt-1" style={{ color: "#ef4444" }}>
+            {errorMessage}
+          </div>
+        )}
       </div>
     );
   };
@@ -254,12 +349,14 @@ export default function MIRiskForm() {
 
   return (
     <div className="container-fluid py-4" style={{ maxWidth: "900px" }}>
-
-      {/* ── FIX 1: inject ::placeholder rule — inline styles cannot target pseudo-elements ── */}
       <style>{`
         .mi-risk-input::placeholder {
           color: rgba(255, 255, 255, 0.75) !important;
-          opacity: 1;                  /* Firefox resets opacity by default */
+          opacity: 1;
+        }
+        .mi-risk-input.is-invalid {
+          border-color: #ef4444 !important;
+          box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
         }
       `}</style>
 
@@ -282,10 +379,10 @@ export default function MIRiskForm() {
             {STEPS.map((s, i) => (
               <button
                 key={s.id}
-                onClick={() => i <= step && setStep(i)}
+                onClick={() => goToStep(i)}
                 className={`step-btn btn d-flex align-items-center gap-2 px-3 py-2 rounded-pill flex-grow-1 flex-sm-grow-0
                   ${i === step ? "bg-success bg-opacity-10 text-success border border-success" : "btn-outline-secondary"}`}
-                disabled={i > step}
+                disabled={i > step} // Still prevent jumping too far ahead visually
               >
                 <div className="d-flex align-items-center justify-content-center rounded-circle"
                   style={{ width: 32, height: 32, background: i < step ? "#0ec3af" : "rgba(255,255,255,0.1)" }}>
@@ -311,6 +408,7 @@ export default function MIRiskForm() {
                   <label className="form-label text-white small fw-semibold">
                     {f.label}
                     {f.optional && <span className="ms-1 text-white-50">(optional)</span>}
+                    {f.required && <span className="ms-1 text-danger">*</span>}
                   </label>
                   {renderField(f)}
                 </div>
@@ -323,6 +421,7 @@ export default function MIRiskForm() {
                   <div key={f.key} className="mb-4">
                     <label className="form-label text-white small fw-semibold">
                       {f.label}
+                      {f.required && <span className="ms-1 text-danger">*</span>}
                     </label>
                     {renderField(f)}
                   </div>
@@ -352,7 +451,7 @@ export default function MIRiskForm() {
 
             {step < STEPS.length - 1 ? (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={goToNext}
                 className="btn btn-success px-5"
               >
                 Next →
