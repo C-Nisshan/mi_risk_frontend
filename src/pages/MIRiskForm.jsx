@@ -12,7 +12,7 @@ const STEPS = [
     subtitle: "Core measurements from your last checkup",
     fields: [
       { key: "age", label: "Age", type: "number", unit: "years", min: 18, max: 90, col: 1, required: true },
-      { key: "cholesterol", label: "Total Cholesterol", type: "number", unit: "mg/dL", min: 50, max: 400, col: 2, required: true },
+      { key: "cholesterol", label: "Total Cholesterol", type: "number", unit: "mg/dL", min: 130, max: 400, col: 2, required: true },
       { key: "heart_rate", label: "Heart Rate", type: "number", unit: "bpm", min: 30, max: 200, col: 1, required: true },
       { key: "systolic", label: "Systolic BP", type: "number", unit: "mmHg", min: 80, max: 200, col: 2, required: true },
       { key: "diastolic", label: "Diastolic BP", type: "number", unit: "mmHg", min: 40, max: 130, col: 1, required: true },
@@ -40,7 +40,7 @@ const STEPS = [
     subtitle: "Daily activity and sleep patterns",
     fields: [
       { key: "exercise_hours_per_week", label: "Exercise", type: "number", unit: "hrs/week", min: 0, max: 30, col: 1, required: true },
-      { key: "sedentary_hours_per_day", label: "Sedentary Time", type: "number", unit: "hrs/day", min: 0, max: 20, col: 2, required: true },
+      { key: "sedentary_hours_per_day", label: "Sedentary Time", type: "number", unit: "hrs/day", min: 1, max: 20, col: 2, required: true },
       { key: "physical_activity_days", label: "Active Days per Week", type: "number", unit: "days/wk", min: 0, max: 7, col: 1, required: true },
       { key: "sleep_hours_per_day", label: "Sleep", type: "number", unit: "hrs/day", min: 2, max: 12, step: "0.5", col: 2, required: true },
     ],
