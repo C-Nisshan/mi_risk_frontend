@@ -78,19 +78,13 @@ function ResultModal({ result, onClose }) {
                style={{ background: `linear-gradient(135deg,${RB[cat]},rgba(99,102,241,0.08))` }}>
             <div className="d-flex gap-4 flex-wrap">
               <div className="text-center">
-                <div className="text-uppercase small opacity-50">MI Risk</div>
+                <div className="text-uppercase small opacity-50">Heart Attack Risk Level</div>
                 <div className="display-4 fw-bold" style={{ color: RC[cat] }}>{cat}</div>
               </div>
               <div className="text-center">
-                <div className="text-uppercase small opacity-50">Score</div>
+                <div className="text-uppercase small opacity-50">Risk Percentage</div>
                 <div className="display-4 fw-bold" style={{ color: RC[cat] }}>
                   {result.mi_risk_percentage.toFixed(0)}<span className="fs-4 fw-normal opacity-50">%</span>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-uppercase small opacity-50">Confidence</div>
-                <div className="display-4 fw-bold text-white">
-                  {(result.confidence * 100).toFixed(0)}<span className="fs-4 fw-normal opacity-50">%</span>
                 </div>
               </div>
             </div>
@@ -98,18 +92,6 @@ function ResultModal({ result, onClose }) {
           </div>
 
           <div className="modal-body">
-            <h6 className="text-uppercase small opacity-50 mb-3">Class Probabilities</h6>
-            {Object.entries(result.class_probabilities).map(([cls, p]) => (
-              <div key={cls} className="mb-3">
-                <div className="d-flex justify-content-between small mb-1">
-                  <span style={{ color: RC[cls], fontWeight: 600 }}>{cls}</span>
-                  <span className="opacity-50">{(p * 100).toFixed(0)}%</span>
-                </div>
-                <div className="progress" style={{ height: "8px" }}>
-                  <div className="progress-bar" style={{ width: `${p * 100}%`, backgroundColor: RC[cls] }}></div>
-                </div>
-              </div>
-            ))}
 
             {result.fat_intake_used && (
               <div className="mt-4 p-3 rounded-3" style={{ background: "rgba(14,195,175,0.08)", border: "1px solid rgba(14,195,175,0.2)" }}>
